@@ -1,0 +1,9 @@
+project:
+  output-dir: _docs
+
+website:
+  title: "better_simon"
+  site-url: "https://hgzech.github.io/better_simon"
+  description: "A project aimed at designing a unconfounded mobile Simon task"
+  repo-branch: main
+  repo-url: "https://github.com/hgzech/better_simon"
