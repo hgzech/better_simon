@@ -3,6 +3,45 @@
 <head>
     <title>Color Pipe Game</title>
     <link rel="stylesheet" type="text/css" href="style.css">
+        <!-- Firebase App is always required and must be listed first -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+
+    <!-- Add Firebase products that you want to use -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <script>
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+          apiKey: "AIzaSyBIV8bLpfRT0wI8HicYgsepOswdf2XMKCE",
+          authDomain: "bettersimon-70387.firebaseapp.com",
+          databaseURL: "https://bettersimon-70387-default-rtdb.europe-west1.firebasedatabase.app",
+          projectId: "bettersimon-70387",
+          storageBucket: "bettersimon-70387.appspot.com",
+          messagingSenderId: "260506057546",
+          appId: "1:260506057546:web:8d693350da782ce32d1fb3",
+          measurementId: "G-WG6L2YJR15"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        function sendDataToFirebase(data) {
+            var db = firebase.database();
+            var ref = db.ref('your_data');
+
+            ref.set(data)
+                .then(function() {
+                    console.log("Data saved successfully.");
+                })
+                .catch(function(error) {
+                    console.log("Failed to save data: " + error.message);
+                });
+        }
+
+        function sendData() {
+            sendDataToFirebase({ name: name, age: age });
+        }
+    </script>
 </head>
 <body>
 
@@ -85,6 +124,8 @@
         if (initialBallColor === selectedPipe.dataset.color) {
             trials[type].accurateCount++;
         }
+
+        sendDataToFirebase({ rt: reactionTime, isCongruent: isCongruent });
 
         updateDisplay('congruent');
         updateDisplay('incongruent');
