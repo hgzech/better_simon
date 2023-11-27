@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Color Pipe Game</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+
+    <div id="game-container">
+        <div class="pipe top-pipe" id="top-pipe-1"></div>
+        <div class="pipe top-pipe" id="top-pipe-2"></div>
+        <div class="pipe top-pipe" id="top-pipe-3"></div>
+        <div class="pipe top-pipe" id="top-pipe-4"></div>
+
+        <div class="pipe bottom-pipe" id="bottom-pipe-1" data-color="red" data-key="49"></div> <!-- Key '1' -->
+        <div class="pipe bottom-pipe" id="bottom-pipe-2" data-color="green" data-key="50"></div> <!-- Key '2' -->
+        <div class="pipe bottom-pipe" id="bottom-pipe-3" data-color="blue" data-key="51"></div> <!-- Key '3' -->
+        <div class="pipe bottom-pipe" id="bottom-pipe-4" data-color="yellow" data-key="52"></div> <!-- Key '4' -->
+        <div id="ball"></div>
+        <div id="info-box">
+            <div id="avg-congruent-time">RTC: 0</div>
+            <div id="avg-incongruent-time">RTI: 0</div>
+            <div id="avg-congruent-accuracy">ACCC: 0%</div>
+            <div id="avg-incongruent-accuracy">ACCI: 0%</div>
+        </div>
+    </div>
+
+
+<script>
+    const ballDiameter = 10; // Diameter in pixels
+    const pipeWidth = 12; // Width in percentage
+    let fallTime = 1200;
+    const ITI = 600;
+    let revealDelay = 100;
+
+    const gameContainerHeight = document.getElementById('game-container').clientHeight;
+    const topPipeHeight = document.getElementById('top-pipe-1').clientHeight;
+
+
+    fallTime = fallTime * ( gameContainerHeight/(gameContainerHeight - 2*topPipeHeight));
+
+    revealDelay = fallTime*(topPipeHeight/gameContainerHeight) + revealDelay;
+
+
+
+    let ballFalling = false;
+    let startTime;
+    let trials = {
+        congruent: { times: [], accurateCount: 0, totalCount: 0 },
+        incongruent: { times: [], accurateCount: 0, totalCount: 0 }
+    };
+    let initialBallColor;
+
+    function calculateAverage(times) {
+        return times.length ? times.reduce((a, b) => a + b, 0) / times.length : 0;
+    }
+
+    function updateDisplay(type) {
+        const avgTime = calculateAverage(trials[type].times).toFixed(0);
+        const accuracy = trials[type].totalCount ? (trials[type].accurateCount / trials[type].totalCount * 100).toFixed(0) : 0;
+        document.getElementById(`avg-${type}-time`).textContent = `RT${type.toUpperCase().charAt()}: ${avgTime}`;
+        document.getElementById(`avg-${type}-accuracy`).textContent = `ACC${type.toUpperCase().charAt()}: ${accuracy}%`;
+    }
+
+    function handlePlayerResponse(selectedPipe) {
+        selectedPipe.classList.add('selected-pipe');
+        setTimeout(() => selectedPipe.classList.remove('selected-pipe'), 500);
+        //Get the computed style of the selected pipe to find its exact position.
+        const pipeComputedStyle = window.getComputedStyle(selectedPipe);
+        const pipePosition = pipeComputedStyle.left;
+
+        // Change the horizontal position of the ball to match the selected pipe.
+        const ball = document.getElementById('ball');
+        ball.style.transition = 'left 0.5s ease';
+        ball.style.left = `calc(${pipePosition} + (${pipeWidth}% / 2) - (${ballDiameter}vw / 2))`;
+        if (!ballFalling) return;
+
+        const reactionTime = Date.now() - startTime;
+        const ballColor = document.getElementById('ball').style.backgroundColor;
+        const isCongruent = ballColor === initialPipeColor;
+        const type = isCongruent ? 'congruent' : 'incongruent';
+
+        trials[type].times.push(reactionTime);
+        trials[type].totalCount++;
+        if (initialBallColor === selectedPipe.dataset.color) {
+            trials[type].accurateCount++;
+        }
+
+        updateDisplay('congruent');
+        updateDisplay('incongruent');
+    }
+
+    document.querySelectorAll('.bottom-pipe').forEach(pipe => {
+        pipe.addEventListener('click', () => ballFalling && handlePlayerResponse(pipe));
+        pipe.addEventListener('touchstart', () => ballFalling && handlePlayerResponse(pipe));
+    });
+
+    window.addEventListener('keydown', e => {
+        if (ballFalling) {
+            const pipe = document.querySelector(`.bottom-pipe[data-key="${e.keyCode}"]`);
+            pipe && handlePlayerResponse(pipe);
+        }
+    });
+
+    function releaseBall() {
+        const ball = document.getElementById('ball');
+        const pipePositions = ['9%', '34%', '59%', '84%'];
+        const pipeColors = ['red', 'green', 'blue', 'yellow'];
+
+        const randomIndex = Math.floor(Math.random() * pipeColors.length);
+
+        initialPipeColor = pipeColors[randomIndex]; 
+
+        const isCongruentTrial = Math.random() < 0.5; // 50% chance
+
+        if (isCongruentTrial) {
+            // For a congruent trial, the ball's color matches the pipe's color
+            initialBallColor = initialPipeColor;
+        } else {
+            // For an incongruent trial, select a different color for the ball
+            let differentColor;
+            do {
+                differentColor = pipeColors[Math.floor(Math.random() * pipeColors.length)];
+            } while (differentColor === initialPipeColor);
+            initialBallColor = differentColor;
+        }
+
+        ball.style.transition = 'none';
+        ball.style.left = `calc(${pipePositions[randomIndex]} - ${ballDiameter / 2}vw)`;
+        ball.style.top = '-0px';
+        ball.style.backgroundColor = 'grey';
+        ball.style.width = `${ballDiameter}vw`;
+        ball.style.height = `${ballDiameter}vw`;
+        ball.style.zIndex = 10;
+
+        ballFalling = true;
+        startTime = Date.now();
+
+        const dropBall = () => {
+            const elapsedTime = Date.now() - startTime;
+            if (elapsedTime < fallTime) {
+                ball.style.top = `${gameContainerHeight * (elapsedTime / fallTime)}px`;
+                requestAnimationFrame(dropBall);
+            } else {
+                ballFalling = false;
+                setTimeout(releaseBall, ITI);
+            }
+        };
+
+        requestAnimationFrame(dropBall);
+        setTimeout(() => ball.style.backgroundColor = initialBallColor, revealDelay);
+    }
+
+    releaseBall();
+</script>
+
+
+
+</body>
+</html>
