@@ -68,7 +68,7 @@
     let trialNumber = 0;
     const randomID = Math.random().toString(36).substring(2, 8);
     let gameStarted = false;
-    const allTrials = 20;
+    const allTrials = 40;
     let gameEnded = false;
     const gameContainerHeight = document.getElementById('game-container').clientHeight;
     const topPipeHeight = document.getElementById('top-pipe-1').clientHeight;
@@ -118,17 +118,11 @@
         ball.style.transition = 'left 0.5s ease';
         ball.style.left = `calc(${pipePosition} + (${pipeWidth}% / 2) - (${ballDiameter}vw / 2))`;
         if (!ballFalling) return;
-
         const reactionTime = Date.now() - startTime;
         const ballColor = document.getElementById('ball').style.backgroundColor;
         const isCongruent = ballColor === initialPipeColor;
         const type = isCongruent ? 'congruent' : 'incongruent';
-
-
-
         let accuracy = initialBallColor === selectedPipe.dataset.color
-
-
         sendDataToFirebase(randomID + '/' + trialNumber, {accuracy: accuracy, rt: reactionTime, isCongruent: isCongruent });
 
     }
@@ -146,6 +140,8 @@
     });
 
     function releaseBall() {
+        speedup = 0;
+
         if (gameStarted) {
             trialNumber = trialNumber + 1
             if (trialNumber < allTrials){
