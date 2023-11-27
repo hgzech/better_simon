@@ -56,12 +56,6 @@
         <div class="pipe bottom-pipe" id="bottom-pipe-3" data-color="blue" data-key="51"></div> <!-- Key '3' -->
         <div class="pipe bottom-pipe" id="bottom-pipe-4" data-color="yellow" data-key="52"></div> <!-- Key '4' -->
         <div id="ball"></div>
-        <div id="info-box">
-            <div id="avg-congruent-time">RTC: 0</div>
-            <div id="avg-incongruent-time">RTI: 0</div>
-            <div id="avg-congruent-accuracy">ACCC: 0%</div>
-            <div id="avg-incongruent-accuracy">ACCI: 0%</div>
-        </div>
     </div>
 
 
@@ -88,10 +82,6 @@
 
     let ballFalling = false;
     let startTime;
-    let trials = {
-        congruent: { times: [], accurateCount: 0, totalCount: 0 },
-        incongruent: { times: [], accurateCount: 0, totalCount: 0 }
-    };
     let initialBallColor;
 
     function hideCenterText() {
@@ -109,16 +99,7 @@
         }
     }
 
-    function calculateAverage(times) {
-        return times.length ? times.reduce((a, b) => a + b, 0) / times.length : 0;
-    }
 
-    function updateDisplay(type) {
-        const avgTime = calculateAverage(trials[type].times).toFixed(0);
-        const accuracy = trials[type].totalCount ? (trials[type].accurateCount / trials[type].totalCount * 100).toFixed(0) : 0;
-        document.getElementById(`avg-${type}-time`).textContent = `RT${type.toUpperCase().charAt()}: ${avgTime}`;
-        document.getElementById(`avg-${type}-accuracy`).textContent = `ACC${type.toUpperCase().charAt()}: ${accuracy}%`;
-    }
 
     function handlePlayerResponse(selectedPipe) {
         if (gameEnded) {
@@ -144,17 +125,12 @@
         const type = isCongruent ? 'congruent' : 'incongruent';
 
 
-        trials[type].times.push(reactionTime);
-        trials[type].totalCount++;
+
         let accuracy = initialBallColor === selectedPipe.dataset.color
-        if (accuracy) {
-            trials[type].accurateCount++;
-        }
+
 
         sendDataToFirebase(randomID + '/' + trialNumber, {accuracy: accuracy, rt: reactionTime, isCongruent: isCongruent });
 
-        updateDisplay('congruent');
-        updateDisplay('incongruent');
     }
 
     document.querySelectorAll('.bottom-pipe').forEach(pipe => {
