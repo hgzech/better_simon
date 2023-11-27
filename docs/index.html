@@ -25,9 +25,9 @@
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
 
-        function sendDataToFirebase(data) {
+        function sendDataToFirebase(ref, data) {
             var db = firebase.database();
-            var ref = db.ref('your_data');
+            var ref = db.ref(ref);
 
             ref.set(data)
                 .then(function() {
@@ -50,7 +50,7 @@
         <div class="pipe top-pipe" id="top-pipe-2"></div>
         <div class="pipe top-pipe" id="top-pipe-3"></div>
         <div class="pipe top-pipe" id="top-pipe-4"></div>
-
+        <div id="center-text">Your goal is to collect the balls by tapping the pipe of the matching color. Start whenever you're ready.</div>
         <div class="pipe bottom-pipe" id="bottom-pipe-1" data-color="red" data-key="49"></div> <!-- Key '1' -->
         <div class="pipe bottom-pipe" id="bottom-pipe-2" data-color="green" data-key="50"></div> <!-- Key '2' -->
         <div class="pipe bottom-pipe" id="bottom-pipe-3" data-color="blue" data-key="51"></div> <!-- Key '3' -->
@@ -71,7 +71,11 @@
     let fallTime = 1200;
     const ITI = 600;
     let revealDelay = 100;
-
+    let trialNumber = 0;
+    const randomID = Math.random().toString(36).substring(2, 8);
+    let gameStarted = false;
+    const allTrials = 20;
+    let gameEnded = false;
     const gameContainerHeight = document.getElementById('game-container').clientHeight;
     const topPipeHeight = document.getElementById('top-pipe-1').clientHeight;
 
@@ -90,6 +94,21 @@
     };
     let initialBallColor;
 
+    function hideCenterText() {
+        var centerText = document.getElementById('center-text');
+        if (centerText) {
+            centerText.style.display = 'none';
+        }
+    }
+
+    function showAndUpdateCenterText(newText) {
+        var centerText = document.getElementById('center-text');
+        if (centerText) {
+            centerText.textContent = newText; // Change the text
+            centerText.style.display = 'block'; // Make it visible
+        }
+    }
+
     function calculateAverage(times) {
         return times.length ? times.reduce((a, b) => a + b, 0) / times.length : 0;
     }
@@ -102,6 +121,11 @@
     }
 
     function handlePlayerResponse(selectedPipe) {
+        if (gameEnded) {
+            return false;
+        }
+        gameStarted = true
+        hideCenterText();
         selectedPipe.classList.add('selected-pipe');
         setTimeout(() => selectedPipe.classList.remove('selected-pipe'), 500);
         //Get the computed style of the selected pipe to find its exact position.
@@ -119,13 +143,15 @@
         const isCongruent = ballColor === initialPipeColor;
         const type = isCongruent ? 'congruent' : 'incongruent';
 
+
         trials[type].times.push(reactionTime);
         trials[type].totalCount++;
-        if (initialBallColor === selectedPipe.dataset.color) {
+        let accuracy = initialBallColor === selectedPipe.dataset.color
+        if (accuracy) {
             trials[type].accurateCount++;
         }
 
-        sendDataToFirebase({ rt: reactionTime, isCongruent: isCongruent });
+        sendDataToFirebase(randomID + '/' + trialNumber, {accuracy: accuracy, rt: reactionTime, isCongruent: isCongruent });
 
         updateDisplay('congruent');
         updateDisplay('incongruent');
@@ -144,6 +170,15 @@
     });
 
     function releaseBall() {
+        if (gameStarted) {
+            trialNumber = trialNumber + 1
+            if (trialNumber < allTrials){
+                sendDataToFirebase(randomID + '/' + trialNumber, {accuracy: false});
+            } else {
+                gameEnded = true;
+                showAndUpdateCenterText("The experiment finished. Thank you for your participation.");
+            }
+        }
         const ball = document.getElementById('ball');
         const pipePositions = ['9%', '34%', '59%', '84%'];
         const pipeColors = ['red', 'green', 'blue', 'yellow'];

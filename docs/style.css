@@ -55,6 +55,18 @@ body, html {
     border: 3px solid gold; /* Highlight with a gold border */
 }
 
+#center-text {
+    position: absolute;
+    top: 50%; /* Center vertically */
+    left: 50%; /* Center horizontally */
+    transform: translate(-50%, -50%); /* Adjust for true center alignment */
+    max-width: 50%; /* Maximum width of 50% of the viewport */
+    text-align: center; /* Center the text inside the div */
+    font-size: 30px; /* Adjust the font size as needed */
+    color: #000; /* Text color, change as needed */
+    z-index: 30; /* Ensure it's above other elements */
+}
+
 
 /* Position each pipe horizontally across the container */
 #top-pipe-1 { left: 5%; }
