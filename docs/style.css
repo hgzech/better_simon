@@ -62,7 +62,7 @@ body, html {
     transform: translate(-50%, -50%); /* Adjust for true center alignment */
     max-width: 50%; /* Maximum width of 50% of the viewport */
     text-align: center; /* Center the text inside the div */
-    font-size: 30px; /* Adjust the font size as needed */
+    font-size: 3vw; /* Adjust the font size as needed */
     color: #000; /* Text color, change as needed */
     z-index: 30; /* Ensure it's above other elements */
 }
